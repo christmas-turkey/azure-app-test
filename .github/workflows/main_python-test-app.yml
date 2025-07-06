@@ -1,38 +1,78 @@
-trigger:
-  branches:
-    include:
+name: Build and deploy Python app to Azure Web App - python-test-app
+
+on:
+  push:
+    branches:
       - main
+  workflow_dispatch:
 
-pool:
-  vmImage: 'ubuntu-latest'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read #This is required for actions/checkout
 
-steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '3.11'
-      addToPath: true
+    steps:
+      - uses: actions/checkout@v4
 
-  - script: |
-      curl -sSL https://install.python-poetry.org | python3 
-      export PATH="$HOME/.local/bin:$PATH"  
-      poetry config virtualenvs.in-project false
-    displayName: 'Install Poetry'
+      - name: Set up Python version
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 
+          export PATH="$HOME/.local/bin:$PATH"  
+          poetry config virtualenvs.in-project false
+      
+      - name: Install dependencies
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          poetry install 
+        
+      # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
 
-  - script: |
-      export PATH="$HOME/.local/bin:$PATH"
-      poetry install 
-    displayName: 'Install dependencies'
+      - name: Zip artifact for deployment
+        run: zip release.zip ./* -r
 
-  - script: |
-      zip -r $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip src poetry.lock pyproject.toml
-    displayName: 'Zip web app'
+      - name: Upload artifact for deployment jobs
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-app
+          path: |
+            release.zip
+            !venv/
 
-  - task: AzureWebApp@1
-    inputs:
-      azureSubscription: 'Subscription 1'
-      appType: webAppLinux
-      appName: python-azure-web-app
-      resourceGroupName: 'your-resource-group'  # Replace this or pass via pipeline variables
-      package: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
-      deploymentMethod: zipDeploy
-      startupCommand: python src/api/server.py
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    
+    permissions:
+      id-token: write #This is required for requesting the JWT
+      contents: read #This is required for actions/checkout
+
+    steps:
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v4
+        with:
+          name: python-app
+
+      - name: Unzip artifact for deployment
+        run: unzip release.zip
+
+      
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_AB5AEF0EB78548749DF64CEBC800F285 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_006CB7986D174C0387EDBAFD5BF1F084 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_A6F79BB7F1F6450AB97375884C3C33B8 }}
+
+      - name: 'Deploy to Azure Web App'
+        uses: azure/webapps-deploy@v3
+        id: deploy-to-webapp
+        with:
+          app-name: 'python-azure-web-app'
+          slot-name: 'Production'
+          
