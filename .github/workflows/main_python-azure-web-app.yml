@@ -24,13 +24,16 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Create and start virtual environment
+      - name: Install Poetry
         run: |
-          python -m venv venv
-          source venv/bin/activate
+          curl -sSL https://install.python-poetry.org | python3 
+          export PATH="$HOME/.local/bin:$PATH"  
+          poetry config virtualenvs.in-project false
       
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          poetry install --no-root
         
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
 
@@ -76,4 +79,3 @@ jobs:
         with:
           app-name: 'python-azure-web-app'
           slot-name: 'Production'
-          
