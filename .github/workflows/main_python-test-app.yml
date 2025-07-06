@@ -1,5 +1,7 @@
 trigger:
-  - main
+  branches:
+    include:
+      - main
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -17,6 +19,7 @@ steps:
     displayName: 'Install Poetry'
 
   - script: |
+      export PATH="$HOME/.local/bin:$PATH"
       poetry install 
     displayName: 'Install dependencies'
 
@@ -29,7 +32,7 @@ steps:
       azureSubscription: 'Subscription 1'
       appType: webAppLinux
       appName: python-azure-web-app
-      resourceGroupName: ${{ parameters.resourceGroupName }}
+      resourceGroupName: 'your-resource-group'  # Replace this or pass via pipeline variables
       package: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
       deploymentMethod: zipDeploy
       startupCommand: python src/api/server.py
