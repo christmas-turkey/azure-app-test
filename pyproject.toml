@@ -1,9 +1,9 @@
 [tool.poetry]
-name = "azure-app-test"
+name = "python-azure-web-app"
 version = "0.1.0"
 description = ""
 authors = ["Sviatoslav Abramov <sviatoslavabramov6@gmail.com>"]
-readme = "README.md"
+package-mode = false 
 
 [tool.poetry.dependencies]
 python = "^3.11"

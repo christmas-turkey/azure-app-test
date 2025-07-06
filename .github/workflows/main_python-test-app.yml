@@ -29,7 +29,7 @@ jobs:
       - name: Install dependencies
         run: |
           export PATH="$HOME/.local/bin:$PATH"
-          poetry install 
+          poetry install --no-root
         
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
 
