@@ -21,4 +21,4 @@ ENV POETRY_VIRTUALENVS_CREATE=false
 RUN poetry install --no-root --only main
 
 # Load .env and run the app via a shell
-CMD bash -c "export $(grep -v '^#' .env | xargs) && poetry run uvicorn src.api.server:app --host=$HOST --port=$PORT --reload"
+CMD bash -c "export $(grep -v '^#' .env | xargs) && poetry run python -m src.api.server"
