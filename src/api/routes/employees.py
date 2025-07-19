@@ -43,6 +43,14 @@ class EmployeeOut(BaseModel):
 
 # --- Endpoints ---
 @router.get(
+    "/healthcheck",
+    summary="Healthcheck endpoint",
+)
+def healthcheck():
+    return {"status": "ok"}
+
+
+@router.get(
     "",
     response_model=List[EmployeeOut],
     summary="List / search employees",
